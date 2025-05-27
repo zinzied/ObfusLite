@@ -1,0 +1,283 @@
+"""
+Core obfuscation engine for PyObfuscator
+"""
+
+import ast
+import base64
+import json
+import hashlib
+import random
+from typing import Dict, Any, Optional
+from .encoders import get_encoder_class, get_available_techniques
+
+class Obfuscator:
+    """
+    Main obfuscation class that provides a simple interface for code obfuscation
+    """
+    
+    def __init__(self):
+        self.techniques = {}
+        self._register_all_techniques()
+        
+    def _register_all_techniques(self):
+        """Register all available obfuscation techniques"""
+        for technique_name in get_available_techniques():
+            encoder_class = get_encoder_class(technique_name)
+            if encoder_class:
+                self.techniques[technique_name] = encoder_class()
+                
+    def obfuscate(self, code: str, technique: str = 'fast_xor', 
+                  layers: int = 2, seed: Optional[int] = None) -> Dict[str, Any]:
+        """
+        Obfuscate Python code using specified technique
+        
+        Args:
+            code: Python source code to obfuscate
+            technique: Obfuscation technique to use
+            layers: Number of obfuscation layers to apply
+            seed: Random seed for reproducible obfuscation
+            
+        Returns:
+            Dictionary containing obfuscated code and metadata
+        """
+        if seed is not None:
+            random.seed(seed)
+            
+        if technique not in self.techniques:
+            available = list(self.techniques.keys())
+            raise ValueError(f"Unknown technique '{technique}'. Available: {available}")
+            
+        # Validate Python syntax
+        try:
+            ast.parse(code)
+        except SyntaxError as e:
+            raise ValueError(f"Invalid Python code: {e}")
+            
+        # Apply preprocessing
+        processed_code = self._preprocess_code(code)
+        
+        # Apply multiple layers of obfuscation
+        obfuscated_data = processed_code
+        layer_metadata = []
+        
+        for layer in range(layers):
+            encoder = self.techniques[technique]
+            result = encoder.encode(obfuscated_data)
+            obfuscated_data = result['encoded']
+            layer_metadata.append({
+                'layer': layer + 1,
+                'technique': technique,
+                'metadata': result.get('metadata', {})
+            })
+            
+        # Generate unique identifier
+        obfuscation_id = hashlib.sha256(
+            f"{technique}_{layers}_{seed}_{len(code)}".encode()
+        ).hexdigest()[:16]
+        
+        return {
+            'obfuscated_code': obfuscated_data,
+            'technique': technique,
+            'layers': layers,
+            'obfuscation_id': obfuscation_id,
+            'layer_metadata': layer_metadata,
+            'original_size': len(code),
+            'obfuscated_size': len(str(obfuscated_data))
+        }
+        
+    def deobfuscate(self, obfuscated_data: Dict[str, Any]) -> str:
+        """
+        Deobfuscate code back to original Python source
+        
+        Args:
+            obfuscated_data: Dictionary containing obfuscated code and metadata
+            
+        Returns:
+            Original Python source code
+        """
+        technique = obfuscated_data['technique']
+        layers = obfuscated_data['layers']
+        layer_metadata = obfuscated_data['layer_metadata']
+        
+        if technique not in self.techniques:
+            raise ValueError(f"Unknown technique: {technique}")
+            
+        # Reverse the layers in reverse order
+        decoded_data = obfuscated_data['obfuscated_code']
+        
+        for layer in reversed(range(layers)):
+            encoder = self.techniques[technique]
+            metadata = layer_metadata[layer]['metadata']
+            decoded_data = encoder.decode(decoded_data, metadata)
+            
+        # Apply postprocessing
+        original_code = self._postprocess_code(decoded_data)
+        
+        return original_code
+        
+    def create_standalone_file(self, obfuscated_data: Dict[str, Any]) -> str:
+        """
+        Create standalone Python code that includes both the obfuscated data
+        and the decoder, suitable for direct execution or PyInstaller compilation
+        
+        Args:
+            obfuscated_data: Dictionary containing obfuscated code and metadata
+            
+        Returns:
+            Standalone Python code as string
+        """
+        technique = obfuscated_data['technique']
+        
+        # Convert obfuscated data to JSON string
+        obfuscated_json = json.dumps(obfuscated_data, default=str)
+        
+        # Get the decoder template based on technique
+        decoder_code = self._get_decoder_template(technique)
+        
+        # Create the standalone code
+        standalone_code = f'''#!/usr/bin/env python3
+"""
+Obfuscated Python Application
+Generated by PyObfuscator v1.0.0
+This file contains obfuscated code that will be decoded and executed at runtime
+"""
+
+import base64
+import zlib
+import json
+
+def _decode_and_execute():
+    """Decode and execute the obfuscated application"""
+    
+    # Embedded obfuscated data
+    obfuscated_info = {obfuscated_json}
+    
+{decoder_code}
+    
+    # Decode the layers
+    decoded = obfuscated_info['obfuscated_code']
+    for layer in reversed(range(obfuscated_info['layers'])):
+        metadata = obfuscated_info['layer_metadata'][layer]['metadata']
+        decoded = decode_layer(decoded, metadata)
+    
+    # Execute the decoded code in global context
+    exec(decoded, globals())
+
+if __name__ == "__main__":
+    _decode_and_execute()
+'''
+        
+        return standalone_code
+        
+    def _preprocess_code(self, code: str) -> str:
+        """Preprocess code before obfuscation"""
+        # Remove comments and docstrings while preserving functionality
+        try:
+            tree = ast.parse(code)
+            
+            # Remove docstrings
+            for node in ast.walk(tree):
+                if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.Module)):
+                    if (node.body and isinstance(node.body[0], ast.Expr) and
+                        isinstance(node.body[0].value, ast.Constant) and
+                        isinstance(node.body[0].value.value, str)):
+                        node.body.pop(0)
+                        
+            # Convert back to source
+            try:
+                import astor
+                processed = astor.to_source(tree)
+            except ImportError:
+                # Fallback to original if astor not available
+                processed = code
+            except Exception:
+                # Fallback to original if astor fails
+                processed = code
+                
+        except SyntaxError:
+            # If parsing fails, return original
+            processed = code
+            
+        return processed.strip()
+        
+    def _postprocess_code(self, code: str) -> str:
+        """Postprocess code after deobfuscation"""
+        return code.strip()
+        
+    def _get_decoder_template(self, technique: str) -> str:
+        """Get the appropriate decoder template for the technique"""
+        
+        if technique == 'fast_xor':
+            return '''    def decode_layer(encoded_data, metadata):
+        """Fast XOR decoder"""
+        keys = metadata['keys']
+        compressed = base64.b64decode(encoded_data.encode('ascii'))
+        encoded_bytes = bytearray(zlib.decompress(compressed))
+        
+        for i, byte in enumerate(encoded_bytes):
+            key_index = i % len(keys)
+            encoded_bytes[i] = byte ^ keys[key_index]
+        
+        return bytes(encoded_bytes).decode('utf-8')'''
+        
+        elif technique == 'fast_base64':
+            return '''    def decode_layer(encoded_data, metadata):
+        """Fast Base64 decoder"""
+        char_map = metadata['char_map']
+        reverse_map = {v: k for k, v in char_map.items()}
+        original_b64 = ''.join(reverse_map.get(c, c) for c in encoded_data)
+        decoded_bytes = base64.b64decode(original_b64.encode('ascii'))
+        return decoded_bytes.decode('utf-8')'''
+        
+        elif technique == 'fast_rotation':
+            return '''    def decode_layer(encoded_data, metadata):
+        """Fast Rotation decoder"""
+        rotations = metadata['rotations']
+        encoded = base64.b64decode(encoded_data.encode('ascii')).decode('utf-8')
+        
+        for rotation in reversed(rotations):
+            result = []
+            for char in encoded:
+                if char.isalpha():
+                    base = ord('A') if char.isupper() else ord('a')
+                    rotated = chr((ord(char) - base - rotation) % 26 + base)
+                    result.append(rotated)
+                else:
+                    result.append(char)
+            encoded = ''.join(result)
+        
+        return encoded'''
+        
+        else:
+            # Generic decoder for other techniques
+            return '''    def decode_layer(encoded_data, metadata):
+        """Generic decoder - requires full library"""
+        from pyobfuscator.encoders import get_encoder_class
+        encoder_class = get_encoder_class(obfuscated_info['technique'])
+        encoder = encoder_class()
+        return encoder.decode(encoded_data, metadata)'''
+        
+    def get_available_techniques(self) -> list:
+        """Get list of available obfuscation techniques"""
+        return list(self.techniques.keys())
+        
+    def get_technique_info(self, technique: str) -> Dict[str, str]:
+        """Get information about a specific technique"""
+        info_map = {
+            'fast_xor': {'type': 'fast', 'description': 'Multi-key XOR with compression'},
+            'fast_base64': {'type': 'fast', 'description': 'Base64 with character substitution'},
+            'fast_rotation': {'type': 'fast', 'description': 'Multi-round Caesar cipher'},
+            'fast_hash': {'type': 'fast', 'description': 'Hash-based chunk encoding'},
+            'fast_binary': {'type': 'fast', 'description': 'Binary manipulation with bit shifting'},
+            'fast_lookup': {'type': 'fast', 'description': 'Character lookup table encoding'},
+            'simple': {'type': 'fast', 'description': 'Simple XOR encoding'},
+            'quantum': {'type': 'advanced', 'description': 'Quantum-inspired encoding'},
+            'dna': {'type': 'advanced', 'description': 'DNA sequence mapping'},
+            'fractal': {'type': 'advanced', 'description': 'Fractal pattern encoding'},
+            'neural': {'type': 'advanced', 'description': 'Neural network weight encoding'},
+            'steganographic': {'type': 'advanced', 'description': 'Steganographic hiding'},
+            'runtime': {'type': 'advanced', 'description': 'Runtime reconstruction'},
+            'tensor': {'type': 'advanced', 'description': 'Multi-dimensional tensor encoding'}
+        }
+        
+        return info_map.get(technique, {'type': 'unknown', 'description': 'Unknown technique'})

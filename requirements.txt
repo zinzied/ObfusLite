@@ -1,0 +1,18 @@
+# Custom Python Code Obfuscation Library Requirements
+
+# Core dependencies
+numpy>=1.21.0
+PyQt6>=6.4.0
+
+# Optional dependencies for enhanced functionality
+astor>=0.8.1  # For AST manipulation in preprocessing
+
+# Development and testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# For PyInstaller compatibility
+pyinstaller>=5.0.0
+
+# Additional scientific computing (optional)
+scipy>=1.9.0  # For advanced mathematical operations in encoders
