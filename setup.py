@@ -57,8 +57,8 @@ setup(
     },
     keywords="obfuscation, code protection, encryption, security, python",
     project_urls={
-        "Bug Reports": "https://github.com/yourusername/pyobfuscator/issues",
-        "Source": "https://github.com/yourusername/pyobfuscator",
-        "Documentation": "https://github.com/yourusername/pyobfuscator/blob/main/README.md",
+        "Bug Reports": "https://github.com/zinzied/pyobfuscator/issues",
+        "Source": "https://github.com/zinzied/pyobfuscator",
+        "Documentation": "https://github.com/zinzied/pyobfuscator/blob/main/README.md",
     },
 )
