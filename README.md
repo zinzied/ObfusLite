@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # 🛡️ ObfusLite - Advanced Python Code Obfuscation
+=======
+# ObfusLite Python Code Obfuscation Library
+>>>>>>> 474534d577a35d3d77e276d4f525af80de8ab7e8
 
 **ObfusLite** is a comprehensive Python code obfuscation library featuring novel encoding techniques and an **enhanced GUI with multi-file support**. Protect your Python applications with professional-grade obfuscation suitable for PyInstaller compilation.
 
