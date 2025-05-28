@@ -1,4 +1,4 @@
-# PyObfuscator - Advanced Python Code Obfuscation Library
+# ObfusLite Python Code Obfuscation Library
 
 A comprehensive Python code obfuscation library featuring novel encoding techniques that go beyond traditional methods. This library provides multiple innovative obfuscation algorithms designed to protect your Python code before compilation with PyInstaller.
 
