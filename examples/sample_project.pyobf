@@ -1,0 +1,45 @@
+{
+  "name": "Sample ObfusLite Project",
+  "description": "A demonstration project showing ObfusLite's multi-file obfuscation capabilities",
+  "created": "2024-01-15T10:30:00",
+  "files": [
+    {
+      "path": "examples/obfuslite_basic_usage.py",
+      "status": "Ready",
+      "modified": "2024-01-15T10:25:00",
+      "technique": "fast_xor",
+      "layers": 2
+    },
+    {
+      "path": "examples/gui_demo.py",
+      "status": "Ready",
+      "modified": "2024-01-15T10:30:00",
+      "technique": "fast_base64",
+      "layers": 3
+    }
+  ],
+  "settings": {
+    "default_technique": "fast_xor",
+    "default_layers": 2,
+    "performance_mode": "fast",
+    "create_backups": true,
+    "output_format": "both"
+  },
+  "templates": {
+    "light_obfuscation": {
+      "technique": "fast_xor",
+      "layers": 1,
+      "performance_mode": "fast"
+    },
+    "medium_obfuscation": {
+      "technique": "fast_base64",
+      "layers": 2,
+      "performance_mode": "balanced"
+    },
+    "heavy_obfuscation": {
+      "technique": "quantum",
+      "layers": 3,
+      "performance_mode": "full"
+    }
+  }
+}

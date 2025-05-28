@@ -1,5 +1,5 @@
 """
-GUI interface for PyObfuscator
+GUI interface for ObfusLite
 
 Provides a user-friendly graphical interface for code obfuscation with multi-file support.
 """
@@ -171,7 +171,7 @@ if PYQT_AVAILABLE:
                 self.error.emit(str(e))
 
     class ObfuscatorGUI(QWidget):
-        """Main GUI application for PyObfuscator"""
+        """Main GUI application for ObfusLite"""
 
         def __init__(self):
             super().__init__()
@@ -183,7 +183,7 @@ if PYQT_AVAILABLE:
             self.initUI()
 
         def initUI(self):
-            self.setWindowTitle(f"PyObfuscator v{__version__} - Advanced Python Code Obfuscation Suite")
+            self.setWindowTitle(f"ObfusLite v{__version__} - Advanced Python Code Obfuscation Suite")
             self.setGeometry(100, 100, 1400, 900)
 
             # Create main layout
@@ -207,7 +207,7 @@ if PYQT_AVAILABLE:
         def load_templates(self):
             """Load saved obfuscation templates"""
             try:
-                templates_file = Path.home() / '.pyobfuscator_templates.json'
+                templates_file = Path.home() / '.obfuslite_templates.json'
                 if templates_file.exists():
                     with open(templates_file, 'r') as f:
                         self.templates = json.load(f)
@@ -1025,7 +1025,7 @@ if PYQT_AVAILABLE:
         def save_templates(self):
             """Save templates to file"""
             try:
-                templates_file = Path.home() / '.pyobfuscator_templates.json'
+                templates_file = Path.home() / '.obfuslite_templates.json'
                 with open(templates_file, 'w') as f:
                     json.dump(self.templates, f, indent=2)
             except Exception as e:

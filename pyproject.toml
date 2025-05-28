@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "obfuslite"
+version = "1.0.0"
+description = "Advanced Python code obfuscation library with enhanced GUI and multi-file support"
+readme = "README_OBFUSLITE.md"
+license = {text = "MIT"}
+authors = [
+    {name = "ObfusLite Development Team", email = "contact@obfuslite.dev"}
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Security :: Cryptography",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.optional-dependencies]
+gui = ["PyQt6>=6.4.0"]
+dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0"]
+full = ["PyQt6>=6.4.0", "numpy>=1.21.0", "scipy>=1.9.0"]
+
+[project.scripts]
+obfuslite = "obfuslite.cli:main"
+obfuslite-gui = "obfuslite.gui:main"
+
+[project.urls]
+Homepage = "https://github.com/obfuslite/obfuslite"
+"Bug Reports" = "https://github.com/obfuslite/obfuslite/issues"
+Source = "https://github.com/obfuslite/obfuslite"
+Documentation = "https://github.com/obfuslite/obfuslite/blob/main/README_OBFUSLITE.md"
+
+[tool.setuptools.packages.find]
+include = ["obfuslite*"]
+exclude = ["tests*", "examples*"]
