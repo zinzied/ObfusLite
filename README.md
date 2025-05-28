@@ -69,7 +69,7 @@ pip install obfuslite[full]
 ### From Source
 
 ```bash
-git clone https://github.com/obfuslite/obfuslite.git
+git clone https://github.com/zinzied/obfuslite.git
 cd obfuslite
 pip install -e .
 ```
@@ -448,8 +448,8 @@ Contributions are welcome! Priority areas:
 
 - **Documentation**: [GUI Features Guide](GUI_FEATURES.md)
 - **Examples**: [examples/](examples/)
-- **Issues**: [GitHub Issues](https://github.com/obfuslite/obfuslite/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/obfuslite/obfuslite/discussions)
+- **Issues**: [GitHub Issues](https://github.com/zinzied/obfuslite/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/zinzied/obfuslite/discussions)
 
 ## 📞 Support
 

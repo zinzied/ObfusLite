@@ -1,6 +1,6 @@
-# PyObfuscator Enhanced GUI Features
+# ObfusLite Enhanced GUI Features
 
-The PyObfuscator GUI has been significantly enhanced with multi-file support and many useful features for professional code obfuscation workflows.
+The ObfusLite GUI has been significantly enhanced with multi-file support and many useful features for professional code obfuscation workflows.
 
 ## 🚀 New Features Overview
 
@@ -172,7 +172,7 @@ JSON format containing:
 
 ### Built-in Templates
 - **Light Obfuscation**: Fast XOR, 1 layer, fast mode
-- **Medium Obfuscation**: Base64, 2 layers, balanced mode  
+- **Medium Obfuscation**: Base64, 2 layers, balanced mode
 - **Heavy Obfuscation**: Quantum, 3 layers, full mode
 
 ### Custom Templates
@@ -225,4 +225,4 @@ main()
 - Close other applications during heavy processing
 - Use SSD storage for better I/O performance
 
-The enhanced GUI makes PyObfuscator suitable for professional development workflows, team collaboration, and large-scale code protection projects.
+The enhanced GUI makes ObfusLite suitable for professional development workflows, team collaboration, and large-scale code protection projects.

@@ -15,7 +15,7 @@ Features:
 
 Usage:
     from obfuslite import Obfuscator
-    
+
     obfuscator = Obfuscator()
     result = obfuscator.obfuscate(code, technique='fast_xor', layers=2)
     standalone_code = obfuscator.create_standalone_file(result)
@@ -33,8 +33,8 @@ GUI Features:
 """
 
 __version__ = "1.0.0"
-__author__ = "ObfusLite Development Team"
-__email__ = "contact@obfuslite.dev"
+__author__ = "Zied Boughdir"
+__email__ = "zinzied@gmail.com"
 __license__ = "MIT"
 
 # Import main classes for easy access
@@ -45,7 +45,7 @@ from .encoders import get_available_techniques, get_fast_techniques, get_advance
 __all__ = [
     'Obfuscator',
     'get_available_techniques',
-    'get_fast_techniques', 
+    'get_fast_techniques',
     'get_advanced_techniques',
     '__version__',
 ]
@@ -61,12 +61,12 @@ PERFORMANCE_MODES = {
 def quick_obfuscate(code: str, technique: str = 'fast_xor', layers: int = 2) -> str:
     """
     Quick obfuscation function for simple use cases
-    
+
     Args:
         code: Python source code to obfuscate
         technique: Obfuscation technique to use (default: 'fast_xor')
         layers: Number of obfuscation layers (default: 2)
-        
+
     Returns:
         Standalone Python code that can be executed directly
     """

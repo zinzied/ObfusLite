@@ -1,5 +1,5 @@
 # Include documentation
-include README_OBFUSLITE.md
+include README.md
 include GUI_FEATURES.md
 include LICENSE
 

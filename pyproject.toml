@@ -6,10 +6,10 @@ build-backend = "setuptools.build_meta"
 name = "obfuslite"
 version = "1.0.0"
 description = "Advanced Python code obfuscation library with enhanced GUI and multi-file support"
-readme = "README_OBFUSLITE.md"
+readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "ObfusLite Development Team", email = "contact@obfuslite.dev"}
+    {name = "Zied Boughdir", email = "zinzied@gmail.com"}
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -38,10 +38,10 @@ obfuslite = "obfuslite.cli:main"
 obfuslite-gui = "obfuslite.gui:main"
 
 [project.urls]
-Homepage = "https://github.com/obfuslite/obfuslite"
-"Bug Reports" = "https://github.com/obfuslite/obfuslite/issues"
-Source = "https://github.com/obfuslite/obfuslite"
-Documentation = "https://github.com/obfuslite/obfuslite/blob/main/README_OBFUSLITE.md"
+Homepage = "https://github.com/zinzied/obfuslite"
+"Bug Reports" = "https://github.com/zinzied/obfuslite/issues"
+Source = "https://github.com/zinzied/obfuslite"
+Documentation = "https://github.com/zinzied/obfuslite/blob/main/README.md"
 
 [tool.setuptools.packages.find]
 include = ["obfuslite*"]

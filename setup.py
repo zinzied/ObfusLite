@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 # Read the README file
 def read_readme():
     try:
-        with open("README_OBFUSLITE.md", "r", encoding="utf-8") as fh:
+        with open("README.md", "r", encoding="utf-8") as fh:
             return fh.read()
     except FileNotFoundError:
         return "ObfusLite - Advanced Python Code Obfuscation Library"
@@ -23,12 +23,12 @@ def read_requirements():
 setup(
     name="obfuslite",
     version="1.0.0",
-    author="ObfusLite Development Team",
-    author_email="contact@obfuslite.dev",
+    author="Zied Boughdir",
+    author_email="zinzied@gmail.com",
     description="Advanced Python code obfuscation library with enhanced GUI and multi-file support",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/obfuslite/obfuslite",
+    url="https://github.com/zinzied/obfuslite",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -63,9 +63,9 @@ setup(
     },
     keywords="obfuscation, code protection, encryption, security, python, gui, batch processing",
     project_urls={
-        "Bug Reports": "https://github.com/obfuslite/obfuslite/issues",
-        "Source": "https://github.com/obfuslite/obfuslite",
-        "Documentation": "https://github.com/obfuslite/obfuslite/blob/main/README.md",
-        "GUI Features": "https://github.com/obfuslite/obfuslite/blob/main/GUI_FEATURES.md",
+        "Bug Reports": "https://github.com/zinzied/obfuslite/issues",
+        "Source": "https://github.com/zinzied/obfuslite",
+        "Documentation": "https://github.com/zinzied/obfuslite/blob/main/README.md",
+        "GUI Features": "https://github.com/zinzied/obfuslite/blob/main/GUI_FEATURES.md",
     },
 )
