@@ -194,6 +194,7 @@ if PYQT_AVAILABLE:
 
             # Create tabs
             self.create_obfuscation_tab()
+            self.create_combine_files_tab()
             self.create_batch_processing_tab()
             self.create_project_management_tab()
             self.create_code_analysis_tab()
@@ -335,6 +336,157 @@ if PYQT_AVAILABLE:
 
             obfuscation_widget.setLayout(layout)
             self.tab_widget.addTab(obfuscation_widget, "Obfuscation")
+
+        def create_combine_files_tab(self):
+            """Create the combine files tab"""
+            combine_widget = QWidget()
+            layout = QVBoxLayout()
+
+            # Input section
+            input_group = QGroupBox("Main File Selection")
+            input_layout = QVBoxLayout()
+
+            # Main file selection
+            main_file_layout = QHBoxLayout()
+            main_file_layout.addWidget(QLabel("Main File (Entry Point):"))
+            self.combine_main_file_line = QLineEdit()
+            self.combine_main_file_line.setPlaceholderText("Select the main Python file...")
+            main_file_layout.addWidget(self.combine_main_file_line)
+
+            self.combine_browse_button = QPushButton("Browse")
+            self.combine_browse_button.clicked.connect(self.select_main_file_for_combine)
+            main_file_layout.addWidget(self.combine_browse_button)
+            input_layout.addLayout(main_file_layout)
+
+            # Auto-detect files button
+            self.combine_detect_button = QPushButton("Auto-Detect Related Files")
+            self.combine_detect_button.clicked.connect(self.auto_detect_files)
+            input_layout.addWidget(self.combine_detect_button)
+
+            input_group.setLayout(input_layout)
+            layout.addWidget(input_group)
+
+            # Files to combine section
+            files_group = QGroupBox("Files to Combine")
+            files_layout = QVBoxLayout()
+
+            self.combine_files_list = QListWidget()
+            self.combine_files_list.setMinimumHeight(150)
+            files_layout.addWidget(self.combine_files_list)
+
+            # File controls
+            file_controls = QHBoxLayout()
+            self.combine_add_file_button = QPushButton("Add File")
+            self.combine_add_file_button.clicked.connect(self.add_file_to_combine)
+            self.combine_remove_file_button = QPushButton("Remove Selected")
+            self.combine_remove_file_button.clicked.connect(self.remove_file_from_combine)
+            self.combine_clear_files_button = QPushButton("Clear All")
+            self.combine_clear_files_button.clicked.connect(self.clear_combine_files)
+
+            file_controls.addWidget(self.combine_add_file_button)
+            file_controls.addWidget(self.combine_remove_file_button)
+            file_controls.addWidget(self.combine_clear_files_button)
+            file_controls.addStretch()
+            files_layout.addLayout(file_controls)
+
+            files_group.setLayout(files_layout)
+            layout.addWidget(files_group)
+
+            # Configuration section
+            config_group = QGroupBox("Combine Configuration")
+            config_layout = QVBoxLayout()
+
+            # Output file
+            output_layout = QHBoxLayout()
+            output_layout.addWidget(QLabel("Output File:"))
+            self.combine_output_line = QLineEdit()
+            self.combine_output_line.setPlaceholderText("combined_app.py")
+            self.combine_output_line.setText("combined_app.py")
+            output_layout.addWidget(self.combine_output_line)
+            config_layout.addLayout(output_layout)
+
+            # Options
+            options_layout = QHBoxLayout()
+            self.combine_auto_obfuscate = QCheckBox("Auto-obfuscate after combining")
+            self.combine_auto_obfuscate.setChecked(True)
+            options_layout.addWidget(self.combine_auto_obfuscate)
+
+            self.combine_test_combined = QCheckBox("Test combined file")
+            self.combine_test_combined.setChecked(True)
+            options_layout.addWidget(self.combine_test_combined)
+            options_layout.addStretch()
+            config_layout.addLayout(options_layout)
+
+            # Obfuscation settings (when auto-obfuscate is enabled)
+            obf_settings_layout = QHBoxLayout()
+            obf_settings_layout.addWidget(QLabel("Technique:"))
+            self.combine_technique_combo = QComboBox()
+            self.combine_technique_combo.addItems(get_fast_techniques())
+            obf_settings_layout.addWidget(self.combine_technique_combo)
+
+            obf_settings_layout.addWidget(QLabel("Layers:"))
+            self.combine_layers_spinbox = QSpinBox()
+            self.combine_layers_spinbox.setRange(1, 5)
+            self.combine_layers_spinbox.setValue(2)
+            obf_settings_layout.addWidget(self.combine_layers_spinbox)
+            obf_settings_layout.addStretch()
+            config_layout.addLayout(obf_settings_layout)
+
+            config_group.setLayout(config_layout)
+            layout.addWidget(config_group)
+
+            # Combine button and progress
+            self.combine_button = QPushButton("Combine Files")
+            self.combine_button.clicked.connect(self.start_combine_process)
+            layout.addWidget(self.combine_button)
+
+            self.combine_progress_bar = QProgressBar()
+            self.combine_progress_bar.setVisible(False)
+            layout.addWidget(self.combine_progress_bar)
+
+            self.combine_status_label = QLabel("")
+            layout.addWidget(self.combine_status_label)
+
+            # Results section
+            results_group = QGroupBox("Combine Results")
+            results_layout = QVBoxLayout()
+
+            # Results tabs
+            self.combine_results_tabs = QTabWidget()
+
+            # Combined code tab
+            self.combine_combined_text = QTextEdit()
+            self.combine_combined_text.setReadOnly(True)
+            self.combine_results_tabs.addTab(self.combine_combined_text, "Combined Code")
+
+            # Obfuscated code tab (if auto-obfuscate is enabled)
+            self.combine_obfuscated_text = QTextEdit()
+            self.combine_obfuscated_text.setReadOnly(True)
+            self.combine_results_tabs.addTab(self.combine_obfuscated_text, "Obfuscated Code")
+
+            # Log tab
+            self.combine_log_text = QTextEdit()
+            self.combine_log_text.setReadOnly(True)
+            self.combine_results_tabs.addTab(self.combine_log_text, "Process Log")
+
+            results_layout.addWidget(self.combine_results_tabs)
+
+            # Save buttons
+            save_layout = QHBoxLayout()
+            self.combine_save_combined_button = QPushButton("Save Combined File")
+            self.combine_save_combined_button.clicked.connect(self.save_combined_file)
+            self.combine_save_obfuscated_button = QPushButton("Save Obfuscated File")
+            self.combine_save_obfuscated_button.clicked.connect(self.save_combined_obfuscated)
+            save_layout.addWidget(self.combine_save_combined_button)
+            save_layout.addWidget(self.combine_save_obfuscated_button)
+            save_layout.addStretch()
+            results_layout.addLayout(save_layout)
+
+            results_group.setLayout(results_layout)
+            layout.addWidget(results_group)
+
+            combine_widget.setLayout(layout)
+            self.tab_widget.addTab(combine_widget, "Combine Files")
 
         def create_batch_processing_tab(self):
             """Create the batch processing tab for multiple files"""
@@ -1312,6 +1464,210 @@ if PYQT_AVAILABLE:
                     with open(file_path, 'w', encoding='utf-8') as f:
                         f.write(code)
                     QMessageBox.information(self, "Success", "Deobfuscated code saved successfully!")
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Failed to save file: {str(e)}")
+
+        # Combine files methods
+        def select_main_file_for_combine(self):
+            """Select main file for combining"""
+            file_path, _ = QFileDialog.getOpenFileName(
+                self, "Select Main Python File", "", "Python Files (*.py);;All Files (*)"
+            )
+            if file_path:
+                self.combine_main_file_line.setText(file_path)
+
+        def auto_detect_files(self):
+            """Auto-detect related files based on main file"""
+            main_file = self.combine_main_file_line.text().strip()
+            if not main_file:
+                QMessageBox.warning(self, "Warning", "Please select a main file first.")
+                return
+
+            try:
+                from .core import combine_python_files
+                from pathlib import Path
+
+                # Get directory of main file
+                main_dir = Path(main_file).parent
+
+                # Find all Python files in the directory and subdirectories
+                python_files = []
+                for py_file in main_dir.rglob("*.py"):
+                    if py_file.name != "__init__.py" and py_file != Path(main_file):
+                        python_files.append(str(py_file))
+
+                # Clear current list and add detected files
+                self.combine_files_list.clear()
+
+                # Add main file first
+                self.combine_files_list.addItem(f"[MAIN] {main_file}")
+
+                # Add other files
+                for py_file in python_files:
+                    self.combine_files_list.addItem(py_file)
+
+                self.combine_status_label.setText(f"Auto-detected {len(python_files)} related files")
+
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Failed to auto-detect files: {str(e)}")
+
+        def add_file_to_combine(self):
+            """Add a file to the combine list"""
+            file_path, _ = QFileDialog.getOpenFileName(
+                self, "Add Python File", "", "Python Files (*.py);;All Files (*)"
+            )
+            if file_path:
+                self.combine_files_list.addItem(file_path)
+
+        def remove_file_from_combine(self):
+            """Remove selected file from combine list"""
+            current_row = self.combine_files_list.currentRow()
+            if current_row >= 0:
+                self.combine_files_list.takeItem(current_row)
+
+        def clear_combine_files(self):
+            """Clear all files from combine list"""
+            self.combine_files_list.clear()
+
+        def start_combine_process(self):
+            """Start the combine process"""
+            main_file = self.combine_main_file_line.text().strip()
+            if not main_file:
+                QMessageBox.warning(self, "Warning", "Please select a main file.")
+                return
+
+            output_file = self.combine_output_line.text().strip() or "combined_app.py"
+
+            # Start progress
+            self.combine_progress_bar.setVisible(True)
+            self.combine_progress_bar.setValue(0)
+            self.combine_status_label.setText("Starting combine process...")
+            self.combine_button.setEnabled(False)
+
+            try:
+                from .core import combine_python_files
+
+                # Clear previous results
+                self.combine_combined_text.clear()
+                self.combine_obfuscated_text.clear()
+                self.combine_log_text.clear()
+
+                log_messages = []
+
+                # Step 1: Combine files
+                self.combine_progress_bar.setValue(20)
+                self.combine_status_label.setText("Combining files...")
+                log_messages.append("🔗 Starting file combination...")
+
+                combined_file = combine_python_files(main_file, output_file)
+                log_messages.append(f"✅ Files combined successfully: {combined_file}")
+
+                # Read combined content
+                with open(combined_file, 'r', encoding='utf-8') as f:
+                    combined_content = f.read()
+
+                self.combine_combined_text.setText(combined_content)
+                self.combine_progress_bar.setValue(50)
+
+                # Step 2: Test combined file if requested
+                if self.combine_test_combined.isChecked():
+                    self.combine_status_label.setText("Testing combined file...")
+                    log_messages.append("🧪 Testing combined file...")
+
+                    try:
+                        compile(combined_content, combined_file, 'exec')
+                        log_messages.append("✅ Combined file syntax is valid")
+                    except SyntaxError as e:
+                        log_messages.append(f"❌ Syntax error in combined file: {e}")
+                        QMessageBox.warning(self, "Warning", f"Syntax error in combined file: {e}")
+
+                self.combine_progress_bar.setValue(70)
+
+                # Step 3: Auto-obfuscate if requested
+                if self.combine_auto_obfuscate.isChecked():
+                    self.combine_status_label.setText("Obfuscating combined file...")
+                    log_messages.append("🔒 Starting obfuscation...")
+
+                    obfuscator = Obfuscator()
+                    technique = self.combine_technique_combo.currentText()
+                    layers = self.combine_layers_spinbox.value()
+
+                    result = obfuscator.obfuscate(combined_content, technique=technique, layers=layers)
+                    standalone_code = obfuscator.create_standalone_file(result)
+
+                    self.combine_obfuscated_text.setText(standalone_code)
+
+                    # Save obfuscated file
+                    obfuscated_file = output_file.replace('.py', '_obfuscated.py')
+                    with open(obfuscated_file, 'w', encoding='utf-8') as f:
+                        f.write(standalone_code)
+
+                    log_messages.append(f"✅ Obfuscated file created: {obfuscated_file}")
+                    log_messages.append(f"   Technique: {technique}")
+                    log_messages.append(f"   Layers: {layers}")
+
+                self.combine_progress_bar.setValue(100)
+                self.combine_status_label.setText("Combine process completed successfully!")
+
+                log_messages.append("🎉 Combine process completed successfully!")
+                log_messages.append(f"📁 Combined file: {combined_file}")
+
+                if self.combine_auto_obfuscate.isChecked():
+                    log_messages.append(f"🔒 Obfuscated file: {obfuscated_file}")
+                    log_messages.append("🚀 Usage:")
+                    log_messages.append(f"   Run: python {obfuscated_file}")
+                    log_messages.append(f"   Create .exe: pyinstaller --onefile {obfuscated_file}")
+                else:
+                    log_messages.append("🚀 Usage:")
+                    log_messages.append(f"   Run: python {combined_file}")
+                    log_messages.append(f"   Create .exe: pyinstaller --onefile {combined_file}")
+
+                # Update log
+                self.combine_log_text.setText('\n'.join(log_messages))
+
+                QMessageBox.information(self, "Success", "Files combined successfully!")
+
+            except Exception as e:
+                self.combine_status_label.setText(f"Error: {str(e)}")
+                QMessageBox.critical(self, "Error", f"Failed to combine files: {str(e)}")
+
+            finally:
+                self.combine_button.setEnabled(True)
+                self.combine_progress_bar.setVisible(False)
+
+        def save_combined_file(self):
+            """Save the combined file"""
+            content = self.combine_combined_text.toPlainText().strip()
+            if not content:
+                QMessageBox.warning(self, "Warning", "No combined code to save.")
+                return
+
+            file_path, _ = QFileDialog.getSaveFileName(
+                self, "Save Combined File", "", "Python Files (*.py);;All Files (*)"
+            )
+            if file_path:
+                try:
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    QMessageBox.information(self, "Success", "Combined file saved successfully!")
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"Failed to save file: {str(e)}")
+
+        def save_combined_obfuscated(self):
+            """Save the combined obfuscated file"""
+            content = self.combine_obfuscated_text.toPlainText().strip()
+            if not content:
+                QMessageBox.warning(self, "Warning", "No obfuscated code to save.")
+                return
+
+            file_path, _ = QFileDialog.getSaveFileName(
+                self, "Save Obfuscated File", "", "Python Files (*.py);;All Files (*)"
+            )
+            if file_path:
+                try:
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    QMessageBox.information(self, "Success", "Obfuscated file saved successfully!")
                 except Exception as e:
                     QMessageBox.critical(self, "Error", f"Failed to save file: {str(e)}")
 

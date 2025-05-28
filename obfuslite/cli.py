@@ -128,6 +128,38 @@ def create_parser() -> argparse.ArgumentParser:
         help='Techniques to benchmark (default: all fast techniques)'
     )
 
+    # Combine command
+    combine_parser = subparsers.add_parser(
+        'combine',
+        help='Combine multiple Python files into one',
+        description='Combine multiple Python files into a single file for easier obfuscation'
+    )
+    combine_parser.add_argument(
+        'main_file',
+        help='Main Python file (entry point)'
+    )
+    combine_parser.add_argument(
+        '-o', '--output',
+        help='Output file for combined code (default: combined_app.py)'
+    )
+    combine_parser.add_argument(
+        '--obfuscate',
+        action='store_true',
+        help='Automatically obfuscate the combined file'
+    )
+    combine_parser.add_argument(
+        '-t', '--technique',
+        default='fast_xor',
+        choices=get_available_techniques(),
+        help='Obfuscation technique to use if --obfuscate is specified (default: fast_xor)'
+    )
+    combine_parser.add_argument(
+        '-l', '--layers',
+        type=int,
+        default=2,
+        help='Number of obfuscation layers if --obfuscate is specified (default: 2)'
+    )
+
     # GUI command
     gui_parser = subparsers.add_parser(
         'gui',
@@ -279,6 +311,73 @@ def cmd_info(args) -> int:
 
     return 0
 
+def cmd_combine(args) -> int:
+    """Handle combine command"""
+
+    # Check input file
+    if not os.path.exists(args.main_file):
+        print(f"Error: Main file '{args.main_file}' not found", file=sys.stderr)
+        return 1
+
+    # Determine output file
+    output_file = args.output or 'combined_app.py'
+
+    print(f"🔗 Combining files starting from '{args.main_file}'...")
+
+    try:
+        # Import combine functionality
+        from .core import combine_python_files
+
+        # Combine files
+        combined_file = combine_python_files(args.main_file, output_file)
+
+        print(f"✅ Combined file created: {combined_file}")
+        print(f"   Original files combined into single file")
+
+        # Obfuscate if requested
+        if args.obfuscate:
+            print(f"\n🔒 Obfuscating combined file...")
+
+            obfuscator = Obfuscator()
+
+            # Read combined file
+            with open(combined_file, 'r', encoding='utf-8') as f:
+                code = f.read()
+
+            # Obfuscate
+            result = obfuscator.obfuscate(
+                code,
+                technique=args.technique,
+                layers=args.layers
+            )
+
+            # Create standalone file
+            standalone_code = obfuscator.create_standalone_file(result)
+
+            # Save obfuscated file
+            obfuscated_file = combined_file.replace('.py', '_obfuscated.py')
+            with open(obfuscated_file, 'w', encoding='utf-8') as f:
+                f.write(standalone_code)
+
+            print(f"✅ Obfuscated file created: {obfuscated_file}")
+            print(f"   Technique: {args.technique}")
+            print(f"   Layers: {args.layers}")
+
+            print(f"\n🚀 Usage:")
+            print(f"   Run: python {obfuscated_file}")
+            print(f"   Create .exe: pyinstaller --onefile {obfuscated_file}")
+        else:
+            print(f"\n🚀 Usage:")
+            print(f"   Run: python {combined_file}")
+            print(f"   Obfuscate: obfuslite obfuscate {combined_file}")
+            print(f"   Create .exe: pyinstaller --onefile {combined_file}")
+
+        return 0
+
+    except Exception as e:
+        print(f"Error during combine operation: {e}", file=sys.stderr)
+        return 1
+
 def cmd_gui(args) -> int:
     """Handle GUI command"""
     try:
@@ -359,6 +458,8 @@ def main() -> int:
         return cmd_info(args)
     elif args.command == 'benchmark':
         return cmd_benchmark(args)
+    elif args.command == 'combine':
+        return cmd_combine(args)
     elif args.command == 'gui':
         return cmd_gui(args)
     else:
