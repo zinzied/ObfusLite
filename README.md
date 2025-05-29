@@ -10,6 +10,7 @@
 
 ### 🖥️ **Enhanced GUI Interface** (NEW!)
 - 🔥 **Multi-File Batch Processing** - Process hundreds of files simultaneously
+- 🔗 **Smart File Combining** - Merge multiple Python files into one (NEW in v1.1.0!)
 - 📁 **Project Management** - Save and load obfuscation projects (`.pyobf` files)
 - 📊 **Code Analysis** - Intelligent recommendations based on code complexity
 - 🔍 **Side-by-Side Comparison** - Compare original vs obfuscated code
@@ -116,6 +117,9 @@ obfuslite-gui
 # Obfuscate a single file
 obfuslite obfuscate input.py -o output.py -t fast_xor -l 2
 
+# Combine multiple files into one (NEW!)
+obfuslite combine main.py --obfuscate -t fast_xor -l 2
+
 # List available techniques
 obfuslite list-techniques
 
@@ -143,6 +147,60 @@ standalone_code = obfuscator.create_standalone_file(result)
 with open('obfuscated_app.py', 'w') as f:
     f.write(standalone_code)
 ```
+
+## 🔗 Smart File Combining (NEW in v1.1.0!)
+
+### **Solve Multi-File Import Issues**
+ObfusLite now includes powerful file combining functionality that solves the common problem where obfuscated multi-file applications can't find their modules.
+
+#### **The Problem:**
+```python
+# main.py
+from utils import helper_function  # ❌ Fails after obfuscation
+from config import settings       # ❌ Import errors
+
+# After obfuscating each file separately, imports break!
+```
+
+#### **The Solution:**
+```bash
+# Combine all files into one before obfuscating
+obfuslite combine main.py --obfuscate
+
+# Creates a single, self-contained file that works perfectly!
+```
+
+#### **CLI Usage:**
+```bash
+# Basic combine
+obfuslite combine main.py
+
+# Combine with custom output
+obfuslite combine main.py -o my_app.py
+
+# Combine and auto-obfuscate
+obfuslite combine main.py --obfuscate -t fast_xor -l 2
+
+# Advanced obfuscation
+obfuslite combine main.py --obfuscate -t quantum -l 3
+```
+
+#### **GUI Usage:**
+1. Launch GUI: `obfuslite gui`
+2. Go to **"Combine Files"** tab
+3. Select your main Python file
+4. Click **"Auto-Detect Related Files"**
+5. Configure obfuscation settings
+6. Click **"Combine Files"**
+7. Get a single, working obfuscated file!
+
+#### **Benefits:**
+- ✅ **No Import Issues** - Single file, no module dependencies
+- ✅ **PyInstaller Ready** - Perfect for creating executables
+- ✅ **Auto-Detection** - Finds all related Python files automatically
+- ✅ **Smart Import Filtering** - Removes local imports, keeps external ones
+- ✅ **Progress Tracking** - Real-time status in GUI
+- ✅ **Error Prevention** - Syntax validation before obfuscation
 
 ## 🖥️ Enhanced GUI Features
 

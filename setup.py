@@ -22,7 +22,7 @@ def read_requirements():
 
 setup(
     name="obfuslite",
-    version="1.0.0",
+    version="1.1.0",
     author="Zied Boughdir",
     author_email="zinzied@gmail.com",
     description="Advanced Python code obfuscation library with enhanced GUI and multi-file support",

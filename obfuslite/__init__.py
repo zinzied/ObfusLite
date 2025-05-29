@@ -32,7 +32,7 @@ GUI Features:
     - Template system for configurations
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "Zied Boughdir"
 __email__ = "zinzied@gmail.com"
 __license__ = "MIT"
