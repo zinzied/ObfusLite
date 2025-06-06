@@ -167,6 +167,22 @@ def create_parser() -> argparse.ArgumentParser:
         description='Start the ObfusLite GUI with multi-file support'
     )
 
+    # Debug command
+    debug_parser = subparsers.add_parser(
+        'debug',
+        help='Debug a combined Python file',
+        description='Analyze a combined file for potential issues'
+    )
+    debug_parser.add_argument(
+        'file',
+        help='Combined Python file to debug'
+    )
+    debug_parser.add_argument(
+        '--verbose', '-v',
+        action='store_true',
+        help='Show detailed analysis'
+    )
+
     return parser
 
 def cmd_obfuscate(args) -> int:
@@ -378,6 +394,83 @@ def cmd_combine(args) -> int:
         print(f"Error during combine operation: {e}", file=sys.stderr)
         return 1
 
+def cmd_debug(args) -> int:
+    """Handle debug command"""
+
+    # Check input file
+    if not os.path.exists(args.file):
+        print(f"Error: File '{args.file}' not found", file=sys.stderr)
+        return 1
+
+    try:
+        from .core import debug_combined_file
+
+        print(f"🔍 Debugging combined file: {args.file}")
+        print("=" * 50)
+
+        debug_info = debug_combined_file(args.file)
+
+        # Basic info
+        print(f"📁 File exists: {'✅' if debug_info['file_exists'] else '❌'}")
+        print(f"✅ Syntax valid: {'✅' if debug_info['syntax_valid'] else '❌'}")
+
+        if debug_info['syntax_error']:
+            error = debug_info['syntax_error']
+            print(f"❌ Syntax Error:")
+            print(f"   Line {error['line']}: {error['message']}")
+            if error['text']:
+                print(f"   Code: {error['text'].strip()}")
+
+        # Statistics
+        if debug_info['syntax_valid']:
+            print(f"\n📊 Statistics:")
+            print(f"   Imports: {len(debug_info['imports'])}")
+            print(f"   Functions: {len(debug_info['functions'])}")
+            print(f"   Classes: {len(debug_info['classes'])}")
+            print(f"   Global variables: {len(debug_info['global_vars'])}")
+
+        # Issues
+        if debug_info['potential_issues']:
+            print(f"\n⚠️  Potential Issues ({len(debug_info['potential_issues'])}):")
+            for i, issue in enumerate(debug_info['potential_issues'], 1):
+                print(f"   {i}. {issue}")
+        else:
+            print(f"\n✅ No obvious issues detected!")
+
+        # Verbose output
+        if args.verbose and debug_info['syntax_valid']:
+            print(f"\n📋 Detailed Analysis:")
+
+            if debug_info['imports']:
+                print(f"\n🔗 Imports ({len(debug_info['imports'])}):")
+                for imp in debug_info['imports'][:10]:  # Show first 10
+                    if imp['type'] == 'import':
+                        print(f"   import {imp['name']}")
+                    else:
+                        print(f"   from {imp['module']} import {imp['name']}")
+                if len(debug_info['imports']) > 10:
+                    print(f"   ... and {len(debug_info['imports']) - 10} more")
+
+            if debug_info['functions']:
+                print(f"\n🔧 Functions ({len(debug_info['functions'])}):")
+                for func in debug_info['functions'][:10]:  # Show first 10
+                    args_str = ', '.join(func['args'])
+                    print(f"   Line {func['line']}: {func['name']}({args_str})")
+                if len(debug_info['functions']) > 10:
+                    print(f"   ... and {len(debug_info['functions']) - 10} more")
+
+            if debug_info['classes']:
+                print(f"\n🏗️  Classes ({len(debug_info['classes'])}):")
+                for cls in debug_info['classes']:
+                    bases_str = f"({', '.join(cls['bases'])})" if cls['bases'] else ""
+                    print(f"   Line {cls['line']}: {cls['name']}{bases_str}")
+
+        return 0
+
+    except Exception as e:
+        print(f"Error during debug: {e}", file=sys.stderr)
+        return 1
+
 def cmd_gui(args) -> int:
     """Handle GUI command"""
     try:
@@ -460,6 +553,8 @@ def main() -> int:
         return cmd_benchmark(args)
     elif args.command == 'combine':
         return cmd_combine(args)
+    elif args.command == 'debug':
+        return cmd_debug(args)
     elif args.command == 'gui':
         return cmd_gui(args)
     else:

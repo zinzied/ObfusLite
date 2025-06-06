@@ -286,7 +286,7 @@ if __name__ == "__main__":
 
 def combine_python_files(main_file: str, output_file: str = "combined_app.py") -> str:
     """
-    Combine multiple Python files into a single file
+    Combine multiple Python files into a single file with improved dependency analysis
 
     Args:
         main_file: Path to the main Python file
@@ -295,124 +295,368 @@ def combine_python_files(main_file: str, output_file: str = "combined_app.py") -
     Returns:
         Path to the combined file
     """
+    import importlib.util
+    import sys
+    import os
 
-    def extract_imports_and_code(file_path):
-        """Extract imports and code from a Python file"""
+    def analyze_imports(file_path):
+        """Analyze imports in a Python file and categorize them"""
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
         try:
             tree = ast.parse(content)
         except SyntaxError as e:
-            print(f"Syntax error in {file_path}: {e}")
-            return [], content
+            print(f"❌ Syntax error in {file_path}: {e}")
+            return [], [], content, []
 
-        imports = []
+        external_imports = []  # Third-party and standard library
+        local_imports = []     # Local modules that will be combined
         other_code = []
+        local_dependencies = []  # Track which local modules this file depends on
 
-        # Get list of local module names
-        local_module_names = set()
+        # Get list of local module names in the project
         main_dir = Path(file_path).parent
+        local_module_names = set()
+        local_module_paths = {}
+
         for py_file in main_dir.rglob("*.py"):
             if py_file.name != "__init__.py":
                 module_name = py_file.stem
                 local_module_names.add(module_name)
+                local_module_paths[module_name] = py_file
 
         for node in tree.body:
             if isinstance(node, (ast.Import, ast.ImportFrom)):
-                # Skip imports of local modules
                 skip_import = False
+                is_local = False
 
                 if isinstance(node, ast.ImportFrom):
                     if node.module:
-                        # Skip relative imports
+                        # Handle relative imports
                         if node.module.startswith('.'):
                             skip_import = True
-                        # Skip imports of local modules
+                            is_local = True
+                            # Extract the actual module name from relative import
+                            relative_module = node.module.lstrip('.')
+                            if relative_module and relative_module in local_module_names:
+                                local_dependencies.append(relative_module)
+                        # Check if it's a local module
                         elif node.module in local_module_names:
                             skip_import = True
-                        # Skip common local directories
-                        elif any(node.module.startswith(local) for local in ['src', 'lib', 'modules', 'utils', 'config']):
+                            is_local = True
+                            local_dependencies.append(node.module)
+                        # More conservative filtering - only skip if we're sure it's local
+                        elif (node.module.split('.')[0] in local_module_names or
+                              any(node.module.startswith(f"{local}.") for local in local_module_names)):
                             skip_import = True
+                            is_local = True
+                            local_dependencies.append(node.module.split('.')[0])
+
                 elif isinstance(node, ast.Import):
-                    # Skip imports of local modules
+                    # Check each imported name
                     for alias in node.names:
                         if alias.name in local_module_names:
                             skip_import = True
+                            is_local = True
+                            local_dependencies.append(alias.name)
                             break
 
-                if not skip_import:
-                    imports.append(ast.unparse(node))
+                if skip_import:
+                    if is_local:
+                        local_imports.append(ast.unparse(node))
+                else:
+                    external_imports.append(ast.unparse(node))
             else:
                 other_code.append(ast.unparse(node))
 
-        return imports, '\n'.join(other_code)
+        return external_imports, local_imports, '\n'.join(other_code), local_dependencies
 
-    def find_local_modules(main_file):
-        """Find all local Python modules referenced by the main file"""
+    def find_actually_imported_modules(main_file):
+        """Find only the modules that are actually imported by analyzing the dependency tree"""
         main_dir = Path(main_file).parent
-        python_files = []
+        visited = set()
+        to_process = [Path(main_file)]
+        dependency_graph = {}
 
-        # Find all .py files in the same directory and subdirectories
-        for py_file in main_dir.rglob("*.py"):
-            if py_file.name != "__init__.py" and py_file != Path(main_file):
-                python_files.append(py_file)
+        while to_process:
+            current_file = to_process.pop(0)
+            if current_file in visited:
+                continue
 
-        return python_files
+            visited.add(current_file)
 
-    # Get all Python files
-    local_modules = find_local_modules(main_file)
-    all_files = [Path(main_file)] + local_modules
+            try:
+                external_imports, local_imports, code, local_deps = analyze_imports(current_file)
+                dependency_graph[current_file] = {
+                    'external_imports': external_imports,
+                    'local_imports': local_imports,
+                    'code': code,
+                    'dependencies': local_deps
+                }
 
-    print(f"📁 Found {len(all_files)} Python files to combine:")
-    for f in all_files:
-        print(f"   - {f}")
+                # Add dependencies to processing queue
+                for dep in local_deps:
+                    dep_file = main_dir / f"{dep}.py"
+                    if dep_file.exists() and dep_file not in visited:
+                        to_process.append(dep_file)
 
-    # Combine all files
-    all_imports = set()
+            except Exception as e:
+                print(f"⚠️  Warning: Could not analyze {current_file}: {e}")
+
+        return dependency_graph
+
+    def topological_sort(dependency_graph, main_file):
+        """Sort files in dependency order (dependencies first)"""
+        # Build adjacency list
+        graph = {}
+        in_degree = {}
+
+        for file_path in dependency_graph:
+            graph[file_path] = []
+            in_degree[file_path] = 0
+
+        for file_path, data in dependency_graph.items():
+            for dep in data['dependencies']:
+                dep_file = file_path.parent / f"{dep}.py"
+                if dep_file in dependency_graph:
+                    graph[dep_file].append(file_path)
+                    in_degree[file_path] += 1
+
+        # Topological sort using Kahn's algorithm
+        queue = [f for f in in_degree if in_degree[f] == 0]
+        result = []
+
+        while queue:
+            current = queue.pop(0)
+            result.append(current)
+
+            for neighbor in graph[current]:
+                in_degree[neighbor] -= 1
+                if in_degree[neighbor] == 0:
+                    queue.append(neighbor)
+
+        # Ensure main file is last
+        main_path = Path(main_file)
+        if main_path in result:
+            result.remove(main_path)
+        result.append(main_path)
+
+        return result
+
+    print(f"🔍 Analyzing dependencies starting from '{main_file}'...")
+
+    # Get dependency graph
+    dependency_graph = find_actually_imported_modules(main_file)
+
+    if not dependency_graph:
+        print("❌ No files found or could not analyze dependencies")
+        return output_file
+
+    print(f"📁 Found {len(dependency_graph)} Python files with dependencies:")
+    for file_path, data in dependency_graph.items():
+        deps = data['dependencies']
+        dep_str = f" (depends on: {', '.join(deps)})" if deps else " (no local dependencies)"
+        print(f"   - {file_path.name}{dep_str}")
+
+    # Sort files in dependency order
+    print("\n🔄 Sorting files by dependencies...")
+    sorted_files = topological_sort(dependency_graph, main_file)
+
+    print("📋 Processing order:")
+    for i, file_path in enumerate(sorted_files, 1):
+        marker = " [MAIN]" if file_path == Path(main_file) else ""
+        print(f"   {i}. {file_path.name}{marker}")
+
+    # Combine all files in dependency order
+    all_external_imports = set()
     all_code = []
+    skipped_local_imports = []
 
     print("\n🔄 Processing files...")
 
-    # Process non-main files first
-    for file_path in local_modules:
-        print(f"   Processing: {file_path}")
-        imports, code = extract_imports_and_code(file_path)
-        all_imports.update(imports)
-        if code.strip():
-            all_code.append(f"\n# === Code from {file_path.name} ===")
-            all_code.append(code)
+    for file_path in sorted_files:
+        print(f"   Processing: {file_path.name}")
+        data = dependency_graph[file_path]
 
-    # Process main file last
-    print(f"   Processing main file: {main_file}")
-    main_imports, main_code = extract_imports_and_code(main_file)
-    all_imports.update(main_imports)
-    all_code.append(f"\n# === Main code from {Path(main_file).name} ===")
-    all_code.append(main_code)
+        all_external_imports.update(data['external_imports'])
+        skipped_local_imports.extend(data['local_imports'])
+
+        if data['code'].strip():
+            is_main = file_path == Path(main_file)
+            marker = "Main code" if is_main else "Code"
+            all_code.append(f"\n# === {marker} from {file_path.name} ===")
+            all_code.append(data['code'])
 
     # Create combined file
     combined_content = []
 
-    # Add header
+    # Add header with more information
     combined_content.append('#!/usr/bin/env python3')
     combined_content.append('"""')
     combined_content.append('Combined Python Application')
-    combined_content.append('Generated by ObfusLite Combiner')
+    combined_content.append('Generated by ObfusLite Combiner v2.0')
+    combined_content.append(f'Source files: {len(sorted_files)} files combined')
+    combined_content.append(f'Main file: {Path(main_file).name}')
+    if skipped_local_imports:
+        combined_content.append(f'Local imports removed: {len(skipped_local_imports)}')
     combined_content.append('"""')
     combined_content.append('')
 
-    # Add all imports
-    if all_imports:
-        combined_content.append('# === All Imports ===')
-        combined_content.extend(sorted(all_imports))
+    # Add all external imports (sorted and deduplicated)
+    if all_external_imports:
+        combined_content.append('# === External Imports ===')
+        combined_content.extend(sorted(all_external_imports))
+        combined_content.append('')
+
+    # Add information about skipped local imports as comments
+    if skipped_local_imports:
+        combined_content.append('# === Removed Local Imports (now combined) ===')
+        for local_import in sorted(set(skipped_local_imports)):
+            combined_content.append(f'# {local_import}')
         combined_content.append('')
 
     # Add all code
     combined_content.extend(all_code)
 
     # Write combined file
-    with open(output_file, 'w', encoding='utf-8') as f:
-        f.write('\n'.join(combined_content))
+    try:
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(combined_content))
 
-    print(f"\n✅ Combined file created: {output_file}")
-    return output_file
+        # Validate the combined file
+        print(f"\n🧪 Validating combined file...")
+        try:
+            with open(output_file, 'r', encoding='utf-8') as f:
+                combined_code = f.read()
+            compile(combined_code, output_file, 'exec')
+            print(f"✅ Combined file syntax is valid")
+        except SyntaxError as e:
+            print(f"⚠️  Warning: Syntax error in combined file: {e}")
+            print(f"   Line {e.lineno}: {e.text}")
+            print(f"   You may need to manually fix the combined file")
+
+        print(f"\n✅ Combined file created: {output_file}")
+        print(f"   📊 Statistics:")
+        print(f"   - Files combined: {len(sorted_files)}")
+        print(f"   - External imports: {len(all_external_imports)}")
+        print(f"   - Local imports removed: {len(set(skipped_local_imports))}")
+        print(f"   - Total lines: {len(combined_content)}")
+
+        return output_file
+
+    except Exception as e:
+        print(f"❌ Error writing combined file: {e}")
+        raise
+
+
+def debug_combined_file(combined_file: str) -> Dict[str, Any]:
+    """
+    Debug a combined Python file to identify potential issues
+
+    Args:
+        combined_file: Path to the combined Python file
+
+    Returns:
+        Dictionary with debugging information
+    """
+    debug_info = {
+        'file_exists': False,
+        'syntax_valid': False,
+        'syntax_error': None,
+        'imports': [],
+        'functions': [],
+        'classes': [],
+        'global_vars': [],
+        'potential_issues': []
+    }
+
+    try:
+        # Check if file exists
+        if not Path(combined_file).exists():
+            debug_info['potential_issues'].append(f"File does not exist: {combined_file}")
+            return debug_info
+
+        debug_info['file_exists'] = True
+
+        # Read file content
+        with open(combined_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Check syntax
+        try:
+            tree = ast.parse(content)
+            debug_info['syntax_valid'] = True
+        except SyntaxError as e:
+            debug_info['syntax_error'] = {
+                'message': str(e),
+                'line': e.lineno,
+                'offset': e.offset,
+                'text': e.text
+            }
+            debug_info['potential_issues'].append(f"Syntax error at line {e.lineno}: {e.msg}")
+            return debug_info
+
+        # Analyze AST
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    debug_info['imports'].append({
+                        'type': 'import',
+                        'name': alias.name,
+                        'asname': alias.asname
+                    })
+            elif isinstance(node, ast.ImportFrom):
+                for alias in node.names:
+                    debug_info['imports'].append({
+                        'type': 'from_import',
+                        'module': node.module,
+                        'name': alias.name,
+                        'asname': alias.asname
+                    })
+            elif isinstance(node, ast.FunctionDef):
+                debug_info['functions'].append({
+                    'name': node.name,
+                    'line': node.lineno,
+                    'args': [arg.arg for arg in node.args.args]
+                })
+            elif isinstance(node, ast.ClassDef):
+                debug_info['classes'].append({
+                    'name': node.name,
+                    'line': node.lineno,
+                    'bases': [ast.unparse(base) for base in node.bases]
+                })
+            elif isinstance(node, ast.Assign):
+                for target in node.targets:
+                    if isinstance(target, ast.Name):
+                        debug_info['global_vars'].append({
+                            'name': target.id,
+                            'line': node.lineno
+                        })
+
+        # Check for potential issues
+        function_names = [f['name'] for f in debug_info['functions']]
+        class_names = [c['name'] for c in debug_info['classes']]
+
+        # Check for duplicate function names
+        if len(function_names) != len(set(function_names)):
+            duplicates = [name for name in set(function_names) if function_names.count(name) > 1]
+            debug_info['potential_issues'].append(f"Duplicate function names: {duplicates}")
+
+        # Check for duplicate class names
+        if len(class_names) != len(set(class_names)):
+            duplicates = [name for name in set(class_names) if class_names.count(name) > 1]
+            debug_info['potential_issues'].append(f"Duplicate class names: {duplicates}")
+
+        # Check for missing common imports
+        import_names = [imp['name'] for imp in debug_info['imports']]
+        if 'sys' not in import_names and '__file__' in content:
+            debug_info['potential_issues'].append("Code uses __file__ but 'sys' not imported")
+
+        if 'os' not in import_names and ('os.path' in content or 'os.getcwd' in content):
+            debug_info['potential_issues'].append("Code uses os functions but 'os' not imported")
+
+    except Exception as e:
+        debug_info['potential_issues'].append(f"Error during analysis: {e}")
+
+    return debug_info
