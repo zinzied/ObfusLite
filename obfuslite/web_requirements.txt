@@ -1,0 +1,13 @@
+# Web Interface Dependencies for ObfusLite
+# Install with: pip install -r web_requirements.txt
+
+# Core web framework
+Flask>=2.0.0
+flask-cors>=3.0.0
+
+# Optional: For better development experience
+Werkzeug>=2.0.0
+
+# Optional: For production deployment
+gunicorn>=20.0.0
+waitress>=2.0.0

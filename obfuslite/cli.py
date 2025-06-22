@@ -23,7 +23,9 @@ def create_parser() -> argparse.ArgumentParser:
                '  obfuslite obfuscate input.py -o output.py\n'
                '  obfuslite obfuscate input.py -t fast_xor -l 3\n'
                '  obfuslite deobfuscate data.json -o original.py\n'
-               '  obfuslite list-techniques\n',
+               '  obfuslite list-techniques\n'
+               '  obfuslite gui\n'
+               '  obfuslite web --port 8080\n',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
@@ -165,6 +167,34 @@ def create_parser() -> argparse.ArgumentParser:
         'gui',
         help='Launch the enhanced GUI interface',
         description='Start the ObfusLite GUI with multi-file support'
+    )
+
+    # Web interface command
+    web_parser = subparsers.add_parser(
+        'web',
+        help='Launch the web interface',
+        description='Start the ObfusLite web interface in your browser'
+    )
+    web_parser.add_argument(
+        '--host',
+        default='127.0.0.1',
+        help='Host to bind the web server to (default: 127.0.0.1)'
+    )
+    web_parser.add_argument(
+        '--port',
+        type=int,
+        default=5000,
+        help='Port to bind the web server to (default: 5000)'
+    )
+    web_parser.add_argument(
+        '--no-browser',
+        action='store_true',
+        help='Do not automatically open browser'
+    )
+    web_parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Run in debug mode'
     )
 
     # Debug command
@@ -484,6 +514,28 @@ def cmd_gui(args) -> int:
         print(f"Error launching GUI: {e}", file=sys.stderr)
         return 1
 
+def cmd_web(args) -> int:
+    """Handle web interface command"""
+    try:
+        from .web_server import start_web_interface
+        print("🌐 Starting ObfusLite Web Interface...")
+
+        success = start_web_interface(
+            host=args.host,
+            port=args.port,
+            debug=args.debug,
+            open_browser=not args.no_browser
+        )
+
+        return 0 if success else 1
+
+    except ImportError:
+        print("❌ Web interface not available. Install Flask: pip install flask flask-cors", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error launching web interface: {e}", file=sys.stderr)
+        return 1
+
 def cmd_benchmark(args) -> int:
     """Handle benchmark command"""
 
@@ -557,6 +609,8 @@ def main() -> int:
         return cmd_debug(args)
     elif args.command == 'gui':
         return cmd_gui(args)
+    elif args.command == 'web':
+        return cmd_web(args)
     else:
         print(f"Unknown command: {args.command}", file=sys.stderr)
         return 1

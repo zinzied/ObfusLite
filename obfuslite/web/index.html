@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ObfusLite - Advanced Python Code Obfuscation</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <meta name="theme-color" content="#007bff">
+</head>
+<body data-theme="light">
+    <!-- Header -->
+    <div id="header">
+        <div class="title">
+            <a href="https://github.com/yourusername/ObfusLite" target="_blank">
+                <img src="img/logo.svg" alt="ObfusLite Logo">
+                <h1>ObfusLite</h1>
+            </a>
+        </div>
+        <div class="extra-links">
+            <a href="https://github.com/yourusername/ObfusLite" target="_blank">
+                <img src="img/github.svg" alt="GitHub">
+                <span>GitHub</span>
+            </a>
+            <a href="#" target="_blank">
+                <img src="img/help.svg" alt="Help">
+                <span>Help & Documentation</span>
+            </a>
+            <div class="ui-config">
+                <label for="language-selection">Language:</label>
+                <select id="language-selection">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                    <option value="de">Deutsch</option>
+                </select>
+                <div id="theme-toggle">
+                    <img src="img/sun.svg" alt="Light theme" id="light-icon">
+                    <img src="img/moon.svg" alt="Dark theme" id="dark-icon">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warnings -->
+    <div id="warnings"></div>
+
+    <!-- Script Location Section -->
+    <div id="script-location-section">
+        <div class="header" onclick="toggleSection('script-location')">
+            <img src="img/chevron-square-up.svg" alt="Toggle" id="script-location-chevron">
+            <h2>Script Location</h2>
+        </div>
+        <div class="content" id="script-location-content">
+            <div class="file-input-container">
+                <input type="text" id="script-location" placeholder="Enter path to your Python script...">
+                <button onclick="browseFile('script-location')">Browse</button>
+            </div>
+            <div class="code-input-container">
+                <textarea id="code-input" placeholder="Or paste your Python code here..." rows="10"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Obfuscation Settings Section -->
+    <div id="obfuscation-settings-section">
+        <div class="header" onclick="toggleSection('obfuscation-settings')">
+            <img src="img/chevron-square-up.svg" alt="Toggle" id="obfuscation-settings-chevron">
+            <h2>Obfuscation Settings</h2>
+        </div>
+        <div class="content" id="obfuscation-settings-content">
+            <div class="option-container">
+                <label for="technique-select">Technique:</label>
+                <select id="technique-select">
+                    <option value="fast_xor">Fast XOR</option>
+                    <option value="base64">Base64</option>
+                    <option value="hex">Hex Encoding</option>
+                    <option value="zlib">Zlib Compression</option>
+                    <option value="dna">DNA Encoding</option>
+                    <option value="steganographic">Steganographic</option>
+                </select>
+            </div>
+            <div class="option-container">
+                <label for="layers-input">Layers:</label>
+                <input type="number" id="layers-input" min="1" max="10" value="2">
+            </div>
+            <div class="option-container">
+                <label for="seed-input">Seed:</label>
+                <input type="number" id="seed-input" min="0" max="999999" value="12345">
+                <label>
+                    <input type="checkbox" id="random-seed"> Use Random Seed
+                </label>
+            </div>
+            <div class="option-container">
+                <label for="performance-mode">Performance Mode:</label>
+                <select id="performance-mode">
+                    <option value="fast">Fast</option>
+                    <option value="balanced">Balanced</option>
+                    <option value="full">Full</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Output Settings Section -->
+    <div id="output-settings-section">
+        <div class="header" onclick="toggleSection('output-settings')">
+            <img src="img/chevron-square-up.svg" alt="Toggle" id="output-settings-chevron">
+            <h2>Output Settings</h2>
+        </div>
+        <div class="content" id="output-settings-content">
+            <div class="option-container">
+                <label for="output-directory">Output Directory:</label>
+                <input type="text" id="output-directory" placeholder="Select output directory...">
+                <button onclick="browseDirectory('output-directory')">Browse</button>
+            </div>
+            <div class="option-container">
+                <label>
+                    <input type="checkbox" id="create-standalone" checked> Create Standalone File
+                </label>
+            </div>
+            <div class="option-container">
+                <label>
+                    <input type="checkbox" id="backup-original" checked> Backup Original File
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Section -->
+    <div id="advanced-section">
+        <div class="header" onclick="toggleSection('advanced')">
+            <img src="img/chevron-square-up.svg" alt="Toggle" id="advanced-chevron">
+            <h2>Advanced</h2>
+        </div>
+        <div class="content" id="advanced-content">
+            <div class="option-container">
+                <label for="custom-options">Custom Options:</label>
+                <textarea id="custom-options" placeholder="Enter custom obfuscation options..." rows="3"></textarea>
+            </div>
+            <div class="option-container">
+                <label>
+                    <input type="checkbox" id="debug-mode"> Debug Mode
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Command Section -->
+    <div id="current-command-section">
+        <h2>Current Command</h2>
+        <textarea id="current-command" readonly rows="3"></textarea>
+    </div>
+
+    <!-- Output Section -->
+    <div id="output-section">
+        <h2>Output</h2>
+        <div id="common-issue-link">
+            <a href="#" target="_blank">Having issues? Check our troubleshooting guide</a>
+        </div>
+        <textarea id="output-text" readonly rows="15"></textarea>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="action-buttons">
+        <button id="obfuscate-button" onclick="startObfuscation()">Obfuscate Code</button>
+        <button id="open-output-button" onclick="openOutputFolder()" style="display: none;">Open Output Folder</button>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="loading-spinner-wrapper" style="display: none;">
+        <div>
+            <div class="loading-spinner"></div>
+            <div class="loading-label">Processing...</div>
+        </div>
+    </div>
+
+    <!-- File input for browsing -->
+    <input type="file" id="file-browser" style="display: none;" accept=".py">
+    <input type="file" id="directory-browser" style="display: none;" webkitdirectory>
+
+    <script src="js/main.js"></script>
+    <script src="js/themes.js"></script>
+</body>
+</html>

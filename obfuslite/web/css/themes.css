@@ -1,0 +1,242 @@
+/* CSS Variables for Theming */
+
+/* Light Theme (Default) */
+:root,
+[data-theme="light"] {
+    /* Colors */
+    --primary: #007bff;
+    --primary-darker: #0056b3;
+    --primary-shadow: rgba(0, 123, 255, 0.25);
+    
+    /* Backgrounds */
+    --background: #ffffff;
+    --section-background: #ffffff;
+    --section-header-background: #f8f9fa;
+    --input-background: #ffffff;
+    --hover-background: #f8f9fa;
+    
+    /* Text */
+    --text: #212529;
+    --text-secondary: #6c757d;
+    --title: #343a40;
+    
+    /* Borders */
+    --border: #dee2e6;
+    --border-radius: 6px;
+    
+    /* States */
+    --disabled: #6c757d;
+    --error: #dc3545;
+    --error-background: #f8d7da;
+    
+    /* Warnings */
+    --warning-background: #fff3cd;
+    --warning-border: #ffeaa7;
+    --warning-text: #856404;
+    
+    /* Icons */
+    --icon-filter: none;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+    /* Colors */
+    --primary: #0d6efd;
+    --primary-darker: #0b5ed7;
+    --primary-shadow: rgba(13, 110, 253, 0.25);
+    
+    /* Backgrounds */
+    --background: #1a1a1a;
+    --section-background: #2d2d2d;
+    --section-header-background: #3a3a3a;
+    --input-background: #2d2d2d;
+    --hover-background: #3a3a3a;
+    
+    /* Text */
+    --text: #ffffff;
+    --text-secondary: #adb5bd;
+    --title: #ffffff;
+    
+    /* Borders */
+    --border: #495057;
+    --border-radius: 6px;
+    
+    /* States */
+    --disabled: #6c757d;
+    --error: #dc3545;
+    --error-background: #2c1618;
+    
+    /* Warnings */
+    --warning-background: #332701;
+    --warning-border: #664d03;
+    --warning-text: #ffda6a;
+    
+    /* Icons */
+    --icon-filter: invert(1);
+}
+
+/* Auto Theme (follows system preference) */
+@media (prefers-color-scheme: dark) {
+    [data-theme="auto"] {
+        /* Colors */
+        --primary: #0d6efd;
+        --primary-darker: #0b5ed7;
+        --primary-shadow: rgba(13, 110, 253, 0.25);
+        
+        /* Backgrounds */
+        --background: #1a1a1a;
+        --section-background: #2d2d2d;
+        --section-header-background: #3a3a3a;
+        --input-background: #2d2d2d;
+        --hover-background: #3a3a3a;
+        
+        /* Text */
+        --text: #ffffff;
+        --text-secondary: #adb5bd;
+        --title: #ffffff;
+        
+        /* Borders */
+        --border: #495057;
+        --border-radius: 6px;
+        
+        /* States */
+        --disabled: #6c757d;
+        --error: #dc3545;
+        --error-background: #2c1618;
+        
+        /* Warnings */
+        --warning-background: #332701;
+        --warning-border: #664d03;
+        --warning-text: #ffda6a;
+        
+        /* Icons */
+        --icon-filter: invert(1);
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    [data-theme="auto"] {
+        /* Colors */
+        --primary: #007bff;
+        --primary-darker: #0056b3;
+        --primary-shadow: rgba(0, 123, 255, 0.25);
+        
+        /* Backgrounds */
+        --background: #ffffff;
+        --section-background: #ffffff;
+        --section-header-background: #f8f9fa;
+        --input-background: #ffffff;
+        --hover-background: #f8f9fa;
+        
+        /* Text */
+        --text: #212529;
+        --text-secondary: #6c757d;
+        --title: #343a40;
+        
+        /* Borders */
+        --border: #dee2e6;
+        --border-radius: 6px;
+        
+        /* States */
+        --disabled: #6c757d;
+        --error: #dc3545;
+        --error-background: #f8d7da;
+        
+        /* Warnings */
+        --warning-background: #fff3cd;
+        --warning-border: #ffeaa7;
+        --warning-text: #856404;
+        
+        /* Icons */
+        --icon-filter: none;
+    }
+}
+
+/* Theme Transition */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Theme Toggle Icons */
+[data-theme="light"] #dark-icon,
+[data-theme="dark"] #light-icon {
+    opacity: 0.4;
+}
+
+[data-theme="light"] #light-icon,
+[data-theme="dark"] #dark-icon {
+    opacity: 1;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--section-background);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* Selection */
+::selection {
+    background: var(--primary-shadow);
+    color: var(--text);
+}
+
+/* Focus Styles */
+*:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    :root {
+        --border: #000000;
+        --text: #000000;
+        --background: #ffffff;
+    }
+    
+    [data-theme="dark"] {
+        --border: #ffffff;
+        --text: #ffffff;
+        --background: #000000;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Print Styles */
+@media print {
+    [data-theme="dark"] {
+        --background: #ffffff;
+        --text: #000000;
+        --section-background: #ffffff;
+        --input-background: #ffffff;
+        --border: #000000;
+    }
+    
+    #theme-toggle,
+    #loading-spinner {
+        display: none !important;
+    }
+}
